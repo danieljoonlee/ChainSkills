@@ -46,9 +46,49 @@ App = {
       App.contracts.ChainList = TruffleContract(chainListArtifact);
       // Set the provider for our contract
       App.contracts.ChainList.setProvider(App.web3Provider);
+      return App.reloadArticles();
     })
-  }
+  },
+
+  reloadArticles: function() {
+    // refresh account information because the balance may have changed
+    App.displayAccountInfo();
+
+    App.contracts.ChainList.deployed().then(function(instance) {
+      return instance.getArticle.call();
+    }).then(function(article) {
+      if (article[0] == 0x0) {
+        // no article
+        return;
+      }
+
+      // Retrieve and clear the article placeholder
+      var articlesRow = $('#articlesRow');
+      articlesRow.empty();
+
+      // Retrieve and fill the article template
+      var articleTemplate = $('#articleTemplate');
+      articleTemplate.find('.panel-title').text(article[1]);
+      articleTemplate.find('.article-description').text(article[2]);
+      // comes in wei
+      articleTemplate.find('.article-price').text(web3.fromWei(article[3], "ether"));
+
+      var seller = article[0];
+      if (seller == App.account) {
+        seller = "You";
+      }
+
+      articleTemplate.find('.article-seller').text(seller);
+
+      // add this new article
+      articlesRow.append(articleTemplate.html());
+    }).catch(function(err) {
+      console.log(err.message);
+    });
+  },
 };
+
+
 
 $(function() {
   $(window).load(function() {
