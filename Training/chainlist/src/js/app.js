@@ -11,9 +11,11 @@ App = {
     // Initialize web3 and set provider to the testRPC.
 
     if (typeof web3 !== 'undefined') {
+      // Mist or Metamask exists, instantiate object that we retrieve
       App.web3Provider = web3.currentProvider;
       web3 = new Web3(web3.currentProvider);
     } else {
+      // Otherwise local
       App.web3Provider = new
       Web3.providers.HttpProvider('http://localhost:8545');
       web3 = new Web3(App.web3Provider);
@@ -37,7 +39,9 @@ App = {
   },
 
   initContract: function() {
-    $.getJSON('ChainList.json', function(chainListArtifact) {
+    // Retrieve meta data and initialize new truffle contract
+    // Uses browser sync to find json file in bs-config.json
+    $.getJSON('ChainList.json', function(chainListArtifact) { 
       // Necessary contract artifact file and use it to instantiate a truffle contract abstraction
       App.contracts.ChainList = TruffleContract(chainListArtifact);
       // Set the provider for our contract
