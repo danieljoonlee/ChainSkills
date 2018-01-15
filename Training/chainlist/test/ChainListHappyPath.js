@@ -7,6 +7,7 @@ contract("ChainList", function(accounts) {
   var articleName = "article 1";
   var articleDescription = "description for article 1";
   var articlePrice = 10;
+  var watcher;
 
   it("initializes with empty values", function() {
     return ChainList.deployed().then(function (instance) {
@@ -29,7 +30,27 @@ contract("ChainList", function(accounts) {
       assert.equal(data[0], seller, "seller must be " + seller);
       assert.equal(data[1], articleName, "article name must be " + articleName);
       assert.equal(data[2], articleDescription, "article description must be " + articleDescription);
-      assert.equal(data[3].toNumber(), web3.toWei(articlePrice, "ether"), "article price must be " + web3.toWei(articlePrice, "ether")); 
+    });
+  });
+
+  it("should trigger an event when a new article is sold", function() {
+    return ChainList.deployed().then(function(instance) {
+      chainListInstance = instance;
+      watcher = chainListInstance.sellArticleEvent();
+      return chainListInstance.sellArticle(
+        articleName,
+        articleDescription,
+        web3.toWei(articlePrice, "ether"), {
+          from: seller
+        }
+      );
+    }).then(function() {
+      return watcher.get();      
+    }).then(function(events) {
+      assert.equal(events.length, 1, "should have received one event");
+      assert.equal(events[0].args._seller, seller, "seller must be " + seller);
+      assert.equal(events[0].args._name, articleName, "article name must be " + articleName);
+      assert.equal(events[0].args._price.toNumber(), web3.toWei(articlePrice, "ether"), "article price must be " + web3.toWei(articlePrice, "ether"));
     });
   });
 });
